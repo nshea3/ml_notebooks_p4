@@ -205,6 +205,7 @@ def value_iteration(mdp, epsilon=0.001):
     U1 = {s: 0 for s in mdp.states}
     R, T, gamma = mdp.R, mdp.T, mdp.gamma
     iter_time = []
+    deltas = []
     while True:
         start_t = timer()
         U = U1.copy()
@@ -214,9 +215,10 @@ def value_iteration(mdp, epsilon=0.001):
                                                    for a in mdp.actions(s))
             delta = max(delta, abs(U1[s] - U[s]))
         end_t = timer()
+        deltas.append(delta)
         iter_time.append(end_t - start_t)
         if delta <= epsilon*(1 - gamma)/gamma:
-            return U, iter_time
+            return U, iter_time, deltas
 
 
 def best_policy(mdp, U):
@@ -242,23 +244,26 @@ def policy_iteration(mdp):
 
     U = {s: 0 for s in mdp.states}
     pi = {s: random.choice(mdp.actions(s)) for s in mdp.states}
-    iter_time = []
+    iter_time, deltas = [], []
     while True:
         start_t = timer()
-        U = policy_evaluation(pi, U, mdp)
+        U_prev, U = U, policy_evaluation(pi, U, mdp)
         unchanged = True
+        delta = 0
         for s in mdp.states:
             a = argmax(mdp.actions(s), key=lambda a: expected_utility(a, s, U, mdp))
             if a != pi[s]:
                 pi[s] = a
                 unchanged = False
+            delta = max(delta, abs(U[s] - U_prev[s]))
+            deltas.append(delta)
         end_t = timer()
         iter_time.append(end_t - start_t)
         if unchanged:
-            return pi, U, iter_time
+            return pi, U, iter_time, deltas
 
 
-def policy_evaluation(pi, U, mdp, k=1):
+def policy_evaluation(pi, U, mdp, k=20):
     """Return an updated utility mapping U from each state in the MDP to its
     utility, using an approximation (modified policy iteration)."""
 
