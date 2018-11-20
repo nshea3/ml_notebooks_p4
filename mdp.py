@@ -239,7 +239,7 @@ def expected_utility(a, s, U, mdp):
 # ______________________________________________________________________________
 
 
-def policy_iteration(mdp):
+def policy_iteration(mdp, k=20):
     """Solve an MDP by policy iteration [Figure 17.7]"""
 
     U = {s: 0 for s in mdp.states}
@@ -247,7 +247,7 @@ def policy_iteration(mdp):
     iter_time, deltas = [], []
     while True:
         start_t = timer()
-        U_prev, U = U, policy_evaluation(pi, U, mdp)
+        U_prev, U = U.copy(), policy_evaluation(pi, U, mdp, k)
         unchanged = True
         delta = 0
         for s in mdp.states:
@@ -256,7 +256,7 @@ def policy_iteration(mdp):
                 pi[s] = a
                 unchanged = False
             delta = max(delta, abs(U[s] - U_prev[s]))
-            deltas.append(delta)
+        deltas.append(delta)
         end_t = timer()
         iter_time.append(end_t - start_t)
         if unchanged:
